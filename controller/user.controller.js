@@ -2,6 +2,8 @@ const validation = require("../middleware/validator");
 const UserServices = require("../services/UserServices");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
+
 exports.registerUser = async (req, res, next) => {
   const { username, email, password } = req.body;
   try {

@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/user.routes');
+const eventListRoutes = require('./routes/eventList.routes');
+const eventBookRoutes = require('./routes/eventBook.routes');
 
 require('dotenv').config()
 
@@ -24,8 +26,12 @@ app.get('/', (req,res,next) => {
 })
 
 
-// localhost:8080/api/v1/posts/
+// localhost:8080/winmac/auth/
 app.use('/winmac/auth', authRoutes);
+app.use('/winmac/eventList', eventListRoutes);
+app.use('/winmac/eventBook', eventBookRoutes);
+
+
 
 mongoose.set("strictQuery", false);
 mongoose.connect(
