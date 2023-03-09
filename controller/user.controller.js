@@ -1,23 +1,53 @@
+const Data = require("../models/user.model");
 const validation = require("../middleware/validator");
-const UserServices = require("../services/UserServices");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+ 
+ //All Events
+ exports.getAllData = async (req, res, next) => {
+  const { intake } = req.body;
+  try {
+    const users = await Data.find({ intake: intake });
+    if(users!=null){
+      const userData = users.map(user => {
+        return {
+          eventBooked: user.eventBooked,
+          eventAttended: user.eventAttended,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          intake: user.intake
+        };
+      });
+      res.status(200).json({
+        length: userData.length,
+        data: userData
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      message: "Something went wrong!",
+      error: error
+    });
+  }
+};
 
-
+  
 exports.registerUser = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, name, intake } = req.body;
+  console.log(req.body);
   try {
     const validationErrors = validation.validationResult(req);
     const errors = [];
     if (!validationErrors.isEmpty) {
       validationErrors.errors.forEach((error) => {
+        console.log("setting error");
         errors.push(error.param);
       });
     } else {
-      const existingEmail = await UserServices.findByEmail(email);
-      const existingUsername = await UserServices.findByUsername(username);
+      const existingEmail = await Data.findOne({ email: req.body.email });
+      const existingUsername = await Data.findOne({ username: req.body.username });
 
       if (existingEmail || existingUsername) {
+        console.log("setting error 2");
         errors.push({ message: "Email or username already exist." });
       }
     }
@@ -26,53 +56,25 @@ exports.registerUser = async (req, res, next) => {
         error: errors,
       });
     }
-    const userSaved = await UserServices.createUser(username, email, password);
+    const obj = JSON.stringify(req.body);
+    const userSaved = await Data.create({
+      "username": obj.username,
+      "email": obj.email,
+      "password": obj.password,
+      "name": obj.name,
+      "intake": obj.intake,
+    });    
     res.status(201).json({
       message: "User created!",
       user: {
         username: userSaved.username,
         email: userSaved.email,
+        password: userSaved.password,
+        name: userSaved.name,
+        intake: userSaved.intake,
       },
     });
   } catch (error) {
     return next(error);
   }
-};
-
-exports.loginUser = async (req, res, next) => {
-  const { username, password } = req.body;
-  try {
-    const validationErrors = validation.validationResult(req);
-    const errors = [];
-    if (!validationErrors.isEmpty) {
-      validationErrors.errors.forEach((error) => {
-        errors.push(error.param);
-      });
-    }
-
-    const existingUser = await UserServices.findByUsername(username);
-
-    if (!existingUser) {
-      error.push({
-        message: "User doesn't exist!",
-      });
-    }
-    const isPassword = await bcrypt.compare(password, existingUser.password);
-    if (!isPassword) {
-      errors.push({
-        message: "Incorrect username or password!",
-      });
-    }
-    const token = jwt.sign(
-      {
-        data: existingUser._id,
-      },
-      process.env.SECRET_KEY
-    );
-    res.status(200).json({
-        data: {
-            access_token: token
-        }
-    })
-  } catch (error) {}
 };

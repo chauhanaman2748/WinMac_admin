@@ -23,6 +23,16 @@ const userSchema = new mongoose.Schema({
         trim:true,
         minlength:8,
     },
+    name: {
+        required:true,
+        type: String,
+        trim: true,
+    },
+    intake: {
+        required:true,
+        type: String,
+        trim: true,  
+    },
     eventBooked: {
         type: [{
             type: String,
@@ -39,12 +49,6 @@ const userSchema = new mongoose.Schema({
     },
 },{timestamps: true, collection: 'users'});
 
-userSchema.path('eventBooked').validate(function(value) {
-    // "this" refers to the document being validated
-    // Use a Set to check if the array has any duplicates
-    const uniqueValues = new Set(value);
-    return uniqueValues.size === value.length;
-}, 'Duplicate events are not allowed');
 
 const User = mongoose.model('User', userSchema);
 
